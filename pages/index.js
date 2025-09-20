@@ -26,11 +26,10 @@ export default function Home() {
     setArticles([]);
     setLoadingOutlines(true);
     const titles = titlesInput.split('\n').map(t => t.trim()).filter(Boolean);
-    const body = { instruction, titles };
     const res = await fetch('/api/generate-outlines', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ instruction, titles }),
     });
     const data = await res.json();
     if (data.error) {
@@ -82,7 +81,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <header className="bg-white shadow">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">PDFBluk</h1>
           <button
             className="text-gray-600 hover:text-gray-900"
@@ -96,7 +95,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto py-10 px-6">
+      <main className="max-w-6xl mx-auto py-10 px-6">
         <div className="bg-white rounded-md shadow-lg p-8 mb-10">
           <h2 className="text-xl font-semibold mb-6 text-gray-800">Generate Articles to PDF</h2>
           <div className="space-y-4">
@@ -118,7 +117,7 @@ export default function Home() {
               value={modifier}
               onChange={(e) => setModifier(e.target.value)}
             />
-            <div className="w-1/3">
+            <div className="w-full md:w-1/3">
               <input
                 type="number"
                 className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
@@ -142,11 +141,27 @@ export default function Home() {
                 className="px-6 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 font-medium"
                 disabled={loadingArticles}
               >
-                {loadingArticles ? `Generating Articles ${progress}%` : 'Generate Articles'}
+                {loadingArticles ? `Generate Articles ${progress}%` : 'Generate Articles'}
               </button>
             )}
           </div>
         </div>
+
+        {/* Outlines Preview Section */}
+        {outlines.length > 0 && (
+          <div className="bg-white rounded-md shadow p-6 mb-10">
+            <h3 className="text-lg font-semibold mb-4">Preview Outlines ({outlines.length})</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {outlines.map((o, idx) => (
+                <div key={idx} className="border rounded-lg p-4">
+                  <div className="font-semibold text-gray-800 mb-1">{o.title}</div>
+                  <div className="text-xs text-gray-500 mb-2">Filename: {o.filename}</div>
+                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{o.outline || "—"}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {loadingArticles && outlines.length > 0 && (
           <div className="mb-10">
@@ -162,30 +177,33 @@ export default function Home() {
 
         {articles.length > 0 && (
           <div className="space-y-6">
-            {articles.map((a, idx) => (
-              <div key={idx} className="bg-white rounded-md shadow p-6">
-                <div className="mb-4">
-                  <input
-                    className="w-full text-2xl font-semibold border-b border-gray-300 p-2 focus:outline-none"
-                    value={a.title}
-                    onChange={(e) => updateArticle(idx, "title", e.target.value)}
+            <h3 className="text-lg font-semibold">Generated Articles</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {articles.map((a, idx) => (
+                <div key={idx} className="bg-white rounded-md shadow p-6">
+                  <div className="mb-4">
+                    <input
+                      className="w-full text-2xl font-semibold border-b border-gray-300 p-2 focus:outline-none"
+                      value={a.title}
+                      onChange={(e) => updateArticle(idx, "title", e.target.value)}
+                    />
+                    <input
+                      className="w-full text-sm text-gray-500 border-b border-gray-300 p-2 focus:outline-none mt-1"
+                      value={a.filename}
+                      onChange={(e) => updateArticle(idx, "filename", e.target.value)}
+                    />
+                  </div>
+                  <textarea
+                    className="w-full border rounded-md p-4 text-gray-700 h-64 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
+                    value={a.content}
+                    onChange={(e) => updateArticle(idx, "content", e.target.value)}
                   />
-                  <input
-                    className="w-full text-sm text-gray-500 border-b border-gray-300 p-2 focus:outline-none mt-1"
-                    value={a.filename}
-                    onChange={(e) => updateArticle(idx, "filename", e.target.value)}
-                  />
+                  <div className="flex justify-end mt-4 text-xs text-gray-500">
+                    {a.content.split(" ").length} words
+                  </div>
                 </div>
-                <textarea
-                  className="w-full border rounded-md p-4 text-gray-700 h-64 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
-                  value={a.content}
-                  onChange={(e) => updateArticle(idx, "content", e.target.value)}
-                />
-                <div className="flex justify-end mt-4 text-xs text-gray-500">
-                  {a.content.split(" ").length} words
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
             <div className="pt-4">
               <button
                 onClick={handleDownload}
