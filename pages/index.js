@@ -10,24 +10,24 @@ export default function Home() {
   }, [router]);
 
   const [instruction, setInstruction] = useState("");
-  const [count, setCount] = useState(20);
-  const [fileList, setFileList] = useState([]);
+  const [count, setCount] = useState(5);
+  const [outlineList, setOutlineList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState("");
 
   const handlePreview = async () => {
     setLoading(true);
-    setProgress("Generating preview...");
+    setProgress("Generating titles and outlines...");
     try {
-      const res = await fetch("/api/batch-generate-list", {
+      const res = await fetch("/api/generate-outlines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instruction, count: Number(count) || 20 }),
+        body: JSON.stringify({ instruction, count: Number(count) || 5 }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setFileList(data.files || []);
-      setProgress(`Preview ready: ${data.files.length} articles planned.`);
+      setOutlineList(data.articles || []);
+      setProgress(`Preview ready: ${data.articles.length} outlines.`);
     } catch (err) {
       alert(err.message);
       setProgress("");
@@ -37,12 +37,12 @@ export default function Home() {
   };
 
   const handleDownload = async () => {
-    setProgress("Generating ZIP...");
+    setProgress("Generating ZIP with full articles...");
     try {
-      const res = await fetch("/api/batch-generate-zip", {
+      const res = await fetch("/api/generate-zip-from-outlines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instruction, count: Number(count) || 20 }),
+        body: JSON.stringify({ outlines: outlineList }),
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -60,11 +60,11 @@ export default function Home() {
 
   return (
     <div style={{ padding: "2rem", maxWidth: 800, margin: "auto" }}>
-      <h1>Batch Article → PDFs (Efficient)</h1>
+      <h1>Hybrid Article Generator → PDFs</h1>
 
       <textarea
         style={{ width: "100%", height: 160, margin: "8px 0", padding: "8px" }}
-        placeholder="Enter a single master instruction for all articles"
+        placeholder="Enter a single master instruction (e.g. 'Write SEO-friendly articles about Coinbase support with headings and FAQs.')"
         value={instruction}
         onChange={(e) => setInstruction(e.target.value)}
       />
@@ -86,24 +86,24 @@ export default function Home() {
         disabled={loading}
         style={{ padding: "10px 18px", marginTop: 16 }}
       >
-        {loading ? "Generating..." : "Preview File List"}
+        {loading ? "Generating..." : "Preview Outlines"}
       </button>
 
       {progress && <p style={{ marginTop: 10 }}>{progress}</p>}
 
-      {fileList.length > 0 && (
+      {outlineList.length > 0 && (
         <div style={{ marginTop: 20 }}>
           <h3>Planned Articles:</h3>
           <ul>
-            {fileList.map((f, i) => (
-              <li key={i}><b>{f.title}</b> → {f.filename}</li>
+            {outlineList.map((a, i) => (
+              <li key={i}><b>{a.title}</b><br/><i>{a.outline}</i><br/>Filename: {a.filename}</li>
             ))}
           </ul>
           <button
             onClick={handleDownload}
             style={{ padding: "10px 18px", marginTop: 16 }}
           >
-            Download ZIP of PDFs
+            Download ZIP of Full PDFs
           </button>
         </div>
       )}

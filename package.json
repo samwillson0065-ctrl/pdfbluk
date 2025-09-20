@@ -1,5 +1,5 @@
 {
-  "name": "my-pdf-app-with-chatgpt-batch-efficient",
+  "name": "my-pdf-app-with-chatgpt-hybrid",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
