@@ -15,16 +15,18 @@ export default function Login() {
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: 420, margin: "auto" }}>
-      <h2>Login</h2>
+    <div className="max-w-md mx-auto p-8">
+      <h2 className="text-xl font-bold mb-4">Login</h2>
       <input
         type="password"
         placeholder="Enter password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
+        className="w-full border rounded p-2 mb-4"
       />
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleLogin} className="bg-blue-600 text-white px-4 py-2 rounded">
+        Login
+      </button>
     </div>
   );
 }

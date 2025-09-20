@@ -13,21 +13,18 @@ export default function Home() {
   const [titlesInput, setTitlesInput] = useState("");
   const [modifier, setModifier] = useState("");
   const [wordLength, setWordLength] = useState(800);
+  const [outlines, setOutlines] = useState([]);
   const [articles, setArticles] = useState([]);
-  const [progress, setProgress] = useState("");
+  const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const handlePreview = async () => {
     setLoading(true);
-    setProgress("Generating outlines...");
     try {
-      const titles = titlesInput
-        .split("\n")
-        .map(t => t.trim())
-        .filter(Boolean);
+      const titles = titlesInput.split("\n").map(t => t.trim()).filter(Boolean);
       const body = titles.length > 0
-        ? { titles, modifier, wordLength }
-        : { instruction, modifier, wordLength, count: 5 };
+        ? { titles }
+        : { instruction, count: 5 };
 
       const res = await fetch("/api/generate-outlines", {
         method: "POST",
@@ -36,36 +33,42 @@ export default function Home() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setArticles(data.articles || []);
-      setProgress(`Preview ready: ${data.articles.length} articles.`);
+      setOutlines(data.articles || []);
     } catch (err) {
       alert(err.message);
-      setProgress("");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownload = async () => {
-    setProgress("Generating ZIP...");
-    try {
-      const res = await fetch("/api/generate-zip-from-outlines", {
+  const handleGenerateArticles = async () => {
+    setArticles([]);
+    setProgress(0);
+    for (let i = 0; i < outlines.length; i++) {
+      const res = await fetch("/api/expand-article", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ outlines: articles, modifier, wordLength }),
+        body: JSON.stringify({ outline: outlines[i], modifier, wordLength }),
       });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "articles_bundle.zip";
-      a.click();
-      URL.revokeObjectURL(url);
-      setProgress("ZIP ready and downloaded.");
-    } catch (err) {
-      alert(err.message);
-      setProgress("");
+      const data = await res.json();
+      setArticles(prev => [...prev, data]);
+      setProgress(Math.round(((i+1) / outlines.length) * 100));
     }
+  };
+
+  const handleDownload = async () => {
+    const res = await fetch("/api/generate-zip-from-articles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ articles }),
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "articles_bundle.zip";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const updateArticle = (idx, field, value) => {
@@ -75,25 +78,25 @@ export default function Home() {
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: 900, margin: "auto" }}>
-      <h1>Full Control Article Generator → PDFs</h1>
+    <div className="max-w-5xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Two-Step Article Generator → PDFs</h1>
 
       <textarea
-        style={{ width: "100%", height: 80, margin: "8px 0", padding: "8px" }}
+        className="w-full border rounded p-2 mb-2"
         placeholder="Master Instruction (ignored if custom titles are given)"
         value={instruction}
         onChange={(e) => setInstruction(e.target.value)}
       />
 
       <textarea
-        style={{ width: "100%", height: 100, margin: "8px 0", padding: "8px" }}
-        placeholder="Optional: Enter custom article titles, one per line"
+        className="w-full border rounded p-2 mb-2"
+        placeholder="Optional: Custom article titles, one per line"
         value={titlesInput}
         onChange={(e) => setTitlesInput(e.target.value)}
       />
 
       <input
-        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
+        className="w-full border rounded p-2 mb-2"
         placeholder="Optional Modifier (e.g., '2025 Update - ')"
         value={modifier}
         onChange={(e) => setModifier(e.target.value)}
@@ -101,48 +104,50 @@ export default function Home() {
 
       <input
         type="number"
-        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
+        className="w-full border rounded p-2 mb-4"
         placeholder="Word length (e.g., 800)"
         value={wordLength}
         onChange={(e) => setWordLength(e.target.value)}
       />
 
-      <button
-        onClick={handlePreview}
-        disabled={loading}
-        style={{ padding: "10px 18px", marginTop: 16 }}
-      >
-        {loading ? "Generating..." : "Preview Outlines"}
+      <button onClick={handlePreview} className="bg-gray-700 text-white px-4 py-2 rounded mr-2">
+        Preview Outlines
       </button>
 
-      {progress && <p style={{ marginTop: 10 }}>{progress}</p>}
+      {outlines.length > 0 && (
+        <button onClick={handleGenerateArticles} className="bg-blue-600 text-white px-4 py-2 rounded">
+          Generate Articles
+        </button>
+      )}
+
+      {progress > 0 && (
+        <div className="w-full bg-gray-200 rounded-full h-4 mt-4">
+          <div className="bg-green-500 h-4 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+        </div>
+      )}
 
       {articles.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <h3>Articles (Editable):</h3>
+        <div className="mt-6">
           {articles.map((a, i) => (
-            <div key={i} style={{ border: "1px solid #ccc", padding: 10, marginBottom: 10 }}>
+            <div key={i} className="bg-white shadow-md rounded-lg p-4 mb-4">
               <input
-                style={{ width: "100%", margin: "4px 0", padding: "6px" }}
+                className="w-full border p-2 rounded mb-2"
                 value={a.title}
                 onChange={(e) => updateArticle(i, "title", e.target.value)}
               />
               <input
-                style={{ width: "100%", margin: "4px 0", padding: "6px" }}
+                className="w-full border p-2 rounded mb-2"
                 value={a.filename}
                 onChange={(e) => updateArticle(i, "filename", e.target.value)}
               />
               <textarea
-                style={{ width: "100%", height: 150, margin: "4px 0", padding: "6px" }}
-                value={a.content || a.outline}
+                className="w-full border p-2 rounded h-40"
+                value={a.content}
                 onChange={(e) => updateArticle(i, "content", e.target.value)}
               />
             </div>
           ))}
-          <button
-            onClick={handleDownload}
-            style={{ padding: "10px 18px", marginTop: 16 }}
-          >
+          <button onClick={handleDownload} className="bg-green-600 text-white px-4 py-2 rounded">
             Download ZIP of PDFs
           </button>
         </div>

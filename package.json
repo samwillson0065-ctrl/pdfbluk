@@ -1,5 +1,5 @@
 {
-  "name": "my-pdf-app-with-chatgpt-fullcontrol",
+  "name": "my-pdf-app-with-chatgpt-twostep",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
