@@ -22,36 +22,29 @@ function pdfBufferFrom(title, content) {
   });
 }
 
-async function expandOutline(title, outline, instruction) {
-  const prompt = `Expand the following outline into a detailed article of 700-800 words.
-It must include:
-- Clear headings/subheadings
-- Smooth flow based on outline points
-- Professional blog tone
-- Include FAQs at the end
-- Integrate relevant keywords naturally
-Return only the article text.
-
+async function expandIfNeeded(title, outline, wordLength) {
+  if (outline && !outline.startsWith("Custom title")) {
+    const prompt = `Expand the following outline into a detailed article of about ${wordLength} words.
+Include headings, FAQs at the end, and professional blog tone.
 TITLE: ${title}
-OUTLINE: ${outline}
-MASTER INSTRUCTION: ${instruction}`;
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You are a professional content writer." },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.9,
-    max_tokens: 1500,
-  });
-
-  return completion.choices?.[0]?.message?.content || "";
+OUTLINE: ${outline}`;
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a professional content writer." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.9,
+      max_tokens: 1500,
+    });
+    return completion.choices?.[0]?.message?.content || "";
+  }
+  return "";
 }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  const { outlines = [], modifier = "" } = req.body || {};
+  const { outlines = [], modifier = "", wordLength = 800 } = req.body || {};
   if (!Array.isArray(outlines) || outlines.length === 0) {
     return res.status(400).json({ error: "No outlines provided." });
   }
@@ -69,7 +62,10 @@ export default async function handler(req, res) {
   try {
     for (const art of outlines) {
       const fullTitle = modifier + art.title;
-      const content = await expandOutline(fullTitle, art.outline, "Master instruction context");
+      let content = art.content || "";
+      if (!content || content === art.outline) {
+        content = await expandIfNeeded(fullTitle, art.outline, wordLength);
+      }
       const pdfBuf = await pdfBufferFrom(fullTitle, content);
       archive.append(pdfBuf, { name: art.filename });
     }

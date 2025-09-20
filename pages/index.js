@@ -10,25 +10,34 @@ export default function Home() {
   }, [router]);
 
   const [instruction, setInstruction] = useState("");
+  const [titlesInput, setTitlesInput] = useState("");
   const [modifier, setModifier] = useState("");
-  const [count, setCount] = useState(5);
-  const [outlineList, setOutlineList] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [wordLength, setWordLength] = useState(800);
+  const [articles, setArticles] = useState([]);
   const [progress, setProgress] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handlePreview = async () => {
     setLoading(true);
-    setProgress("Generating titles and outlines...");
+    setProgress("Generating outlines...");
     try {
+      const titles = titlesInput
+        .split("\n")
+        .map(t => t.trim())
+        .filter(Boolean);
+      const body = titles.length > 0
+        ? { titles, modifier, wordLength }
+        : { instruction, modifier, wordLength, count: 5 };
+
       const res = await fetch("/api/generate-outlines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instruction, count: Number(count) || 5 }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setOutlineList(data.articles || []);
-      setProgress(`Preview ready: ${data.articles.length} outlines.`);
+      setArticles(data.articles || []);
+      setProgress(`Preview ready: ${data.articles.length} articles.`);
     } catch (err) {
       alert(err.message);
       setProgress("");
@@ -38,12 +47,12 @@ export default function Home() {
   };
 
   const handleDownload = async () => {
-    setProgress("Generating ZIP with full articles...");
+    setProgress("Generating ZIP...");
     try {
       const res = await fetch("/api/generate-zip-from-outlines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ outlines: outlineList, modifier }),
+        body: JSON.stringify({ outlines: articles, modifier, wordLength }),
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -59,15 +68,28 @@ export default function Home() {
     }
   };
 
+  const updateArticle = (idx, field, value) => {
+    const newArticles = [...articles];
+    newArticles[idx][field] = value;
+    setArticles(newArticles);
+  };
+
   return (
-    <div style={{ padding: "2rem", maxWidth: 800, margin: "auto" }}>
-      <h1>Hybrid Article Generator → PDFs (with Modifier)</h1>
+    <div style={{ padding: "2rem", maxWidth: 900, margin: "auto" }}>
+      <h1>Full Control Article Generator → PDFs</h1>
 
       <textarea
-        style={{ width: "100%", height: 160, margin: "8px 0", padding: "8px" }}
-        placeholder="Enter a single master instruction"
+        style={{ width: "100%", height: 80, margin: "8px 0", padding: "8px" }}
+        placeholder="Master Instruction (ignored if custom titles are given)"
         value={instruction}
         onChange={(e) => setInstruction(e.target.value)}
+      />
+
+      <textarea
+        style={{ width: "100%", height: 100, margin: "8px 0", padding: "8px" }}
+        placeholder="Optional: Enter custom article titles, one per line"
+        value={titlesInput}
+        onChange={(e) => setTitlesInput(e.target.value)}
       />
 
       <input
@@ -77,17 +99,13 @@ export default function Home() {
         onChange={(e) => setModifier(e.target.value)}
       />
 
-      <label style={{ display: "block", marginTop: 8 }}>
-        Number of articles (max 20):{" "}
-        <input
-          type="number"
-          min="1"
-          max="20"
-          value={count}
-          onChange={(e) => setCount(e.target.value)}
-          style={{ width: 80, marginLeft: 8 }}
-        />
-      </label>
+      <input
+        type="number"
+        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
+        placeholder="Word length (e.g., 800)"
+        value={wordLength}
+        onChange={(e) => setWordLength(e.target.value)}
+      />
 
       <button
         onClick={handlePreview}
@@ -99,23 +117,33 @@ export default function Home() {
 
       {progress && <p style={{ marginTop: 10 }}>{progress}</p>}
 
-      {outlineList.length > 0 && (
+      {articles.length > 0 && (
         <div style={{ marginTop: 20 }}>
-          <h3>Planned Articles:</h3>
-          <ul>
-            {outlineList.map((a, i) => (
-              <li key={i}>
-                <b>{modifier}{a.title}</b><br/>
-                <i>{a.outline}</i><br/>
-                Filename: {a.filename}
-              </li>
-            ))}
-          </ul>
+          <h3>Articles (Editable):</h3>
+          {articles.map((a, i) => (
+            <div key={i} style={{ border: "1px solid #ccc", padding: 10, marginBottom: 10 }}>
+              <input
+                style={{ width: "100%", margin: "4px 0", padding: "6px" }}
+                value={a.title}
+                onChange={(e) => updateArticle(i, "title", e.target.value)}
+              />
+              <input
+                style={{ width: "100%", margin: "4px 0", padding: "6px" }}
+                value={a.filename}
+                onChange={(e) => updateArticle(i, "filename", e.target.value)}
+              />
+              <textarea
+                style={{ width: "100%", height: 150, margin: "4px 0", padding: "6px" }}
+                value={a.content || a.outline}
+                onChange={(e) => updateArticle(i, "content", e.target.value)}
+              />
+            </div>
+          ))}
           <button
             onClick={handleDownload}
             style={{ padding: "10px 18px", marginTop: 16 }}
           >
-            Download ZIP of Full PDFs
+            Download ZIP of PDFs
           </button>
         </div>
       )}

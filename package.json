@@ -1,5 +1,5 @@
 {
-  "name": "my-pdf-app-with-chatgpt-hybrid-modifier",
+  "name": "my-pdf-app-with-chatgpt-fullcontrol",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
