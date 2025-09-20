@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { marked } from "marked";
 
 export default function Home() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function Home() {
         body: JSON.stringify({ outline: outlines[i], modifier, wordLength }),
       });
       const data = await res.json();
+      data.showPreview = false;
       setArticles(prev => [...prev, data]);
       setProgress(Math.round(((i + 1) / outlines.length) * 100));
     }
@@ -147,7 +149,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Outlines Preview Section */}
         {outlines.length > 0 && (
           <div className="bg-white rounded-md shadow p-6 mb-10 border-2 border-gray-300">
             <h3 className="text-lg font-semibold mb-4">Preview Outlines ({outlines.length})</h3>
@@ -194,17 +195,28 @@ export default function Home() {
                     />
                   </div>
 
-                  {/* Editable Text */}
                   <textarea
                     className="w-full border-2 border-gray-300 rounded-md p-4 h-64 text-gray-700 mb-4"
                     value={a.content}
                     onChange={(e) => updateArticle(idx, "content", e.target.value)}
                   />
 
-                  {/* Formatted Preview */}
-                  <div className="prose max-w-none border-2 border-gray-200 rounded-md p-4 bg-gray-50">
-                    <div dangerouslySetInnerHTML={{ __html: a.content.replace(/\n/g, '<br/>') }} />
-                  </div>
+                  <button
+                    className="text-sm text-indigo-600 hover:underline mb-2"
+                    onClick={() => {
+                      const newArr = [...articles];
+                      newArr[idx].showPreview = !newArr[idx].showPreview;
+                      setArticles(newArr);
+                    }}
+                  >
+                    {a.showPreview ? "Hide Preview" : "Show Preview"}
+                  </button>
+
+                  {a.showPreview && (
+                    <div className="prose max-w-none border-2 border-gray-200 rounded-md p-4 bg-gray-50">
+                      <div dangerouslySetInnerHTML={{ __html: marked.parse(a.content || "") }} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
