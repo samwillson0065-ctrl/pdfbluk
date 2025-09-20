@@ -1,7 +1,28 @@
 import PDFDocument from "pdfkit";
 import archiver from "archiver";
+import { marked } from "marked";
 
 export const config = { api: { responseLimit: false } };
+
+function renderMarkdownToPDF(doc, markdown) {
+  const tokens = marked.lexer(markdown || "");
+  tokens.forEach(token => {
+    if (token.type === "heading") {
+      const size = token.depth === 1 ? 20 : token.depth === 2 ? 16 : 14;
+      doc.moveDown().fontSize(size).font("Helvetica-Bold").text(token.text, { align: "left" });
+      doc.moveDown(0.2);
+    } else if (token.type === "paragraph") {
+      doc.moveDown(0.3).fontSize(12).font("Helvetica").text(token.text, { align: "left" });
+    } else if (token.type === "list") {
+      token.items.forEach(item => {
+        doc.fontSize(12).text("• " + item.text, { indent: 20 });
+      });
+      doc.moveDown(0.3);
+    } else if (token.type === "text") {
+      doc.fontSize(12).font("Helvetica").text(token.text, { align: "left" });
+    }
+  });
+}
 
 function pdfBufferFrom(title, content) {
   return new Promise((resolve, reject) => {
@@ -11,9 +32,10 @@ function pdfBufferFrom(title, content) {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    doc.fontSize(20).text(title, { align: "center" });
+    doc.fontSize(20).font("Helvetica-Bold").text(title, { align: "center" });
     doc.moveDown();
-    doc.fontSize(12).text(content || "", { align: "left" });
+
+    renderMarkdownToPDF(doc, content);
 
     doc.end();
   });
