@@ -6,11 +6,13 @@
     "start": "next start"
   },
   "dependencies": {
-    "archiver": "^6.0.2",
-    "next": "^14.0.0",
-    "openai": "^4.0.0",
-    "pdfkit": "^0.13.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  }
+  "archiver": "^6.0.2",
+  "next": "^14.0.0",
+  "openai": "^4.0.0",
+  "pdfkit": "^0.13.0",
+  "react": "^18.0.0",
+  "react-dom": "^18.0.0",
+  "@headlessui/react": "^1.7.15",
+  "@heroicons/react": "^2.0.18"
+}
 }
