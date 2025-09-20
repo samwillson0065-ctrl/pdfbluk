@@ -1,5 +1,5 @@
 {
-  "name": "my-pdf-app-itgeekstyle",
+  "name": "my-pdf-app-fixed",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -1,37 +1,4 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 
-export default function Login() {
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-
-  const handleLogin = () => {
-    if (password === process.env.NEXT_PUBLIC_APP_PASSWORD) {
-      localStorage.setItem("authenticated", "true");
-      router.push("/");
-    } else {
-      alert("Wrong password!");
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow rounded-lg p-8 w-full max-w-sm">
-        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
-        <input
-          type="password"
-          className="w-full border rounded-md p-3 mb-4"
-          placeholder="Enter password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          onClick={handleLogin}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-        >
-          Login
-        </button>
-      </div>
-    </div>
-  );
-}
+export default function Login(){const [password,setPassword]=useState('');const router=useRouter();const handleLogin=()=>{if(password===process.env.NEXT_PUBLIC_APP_PASSWORD){localStorage.setItem('authenticated','true');router.push('/');}else{alert('Wrong password!');}};return(<div className='min-h-screen flex items-center justify-center bg-gray-100'><div className='bg-white shadow rounded-lg p-8 w-full max-w-sm'><h2 className='text-xl font-bold mb-4 text-center'>Login</h2><input type='password' className='w-full border rounded-md p-3 mb-4' placeholder='Enter password' value={password} onChange={(e)=>setPassword(e.target.value)} /><button onClick={handleLogin} className='w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700'>Login</button></div></div>)}

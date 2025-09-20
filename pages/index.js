@@ -20,11 +20,13 @@ export default function Home() {
   const [loadingArticles, setLoadingArticles] = useState(false);
 
   const handlePreview = async () => {
+    if(!instruction){alert("Instruction is required.");return;}
+    if(!titlesInput.trim()){alert("At least one title is required.");return;}
     setOutlines([]);
     setArticles([]);
     setLoadingOutlines(true);
     const titles = titlesInput.split('\n').map(t => t.trim()).filter(Boolean);
-    const body = titles.length > 0 ? { titles } : { instruction, count: 5 };
+    const body = { instruction, titles };
     const res = await fetch('/api/generate-outlines', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -79,7 +81,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">PDFBluk</h1>
@@ -96,20 +97,18 @@ export default function Home() {
       </header>
 
       <main className="max-w-5xl mx-auto py-10 px-6">
-        {/* Configuration Panel */}
         <div className="bg-white rounded-md shadow-lg p-8 mb-10">
           <h2 className="text-xl font-semibold mb-6 text-gray-800">Generate Articles to PDF</h2>
-          
           <div className="space-y-4">
             <textarea
               className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Master Instruction (ignored if custom titles are provided)"
+              placeholder="Master Instruction (required)"
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
             />
             <textarea
               className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Optional: Custom article titles, one title per line"
+              placeholder="Article titles (required, one per line)"
               value={titlesInput}
               onChange={(e) => setTitlesInput(e.target.value)}
             />
@@ -129,15 +128,10 @@ export default function Home() {
               />
             </div>
           </div>
-
           <div className="mt-6 flex gap-4">
             <button
               onClick={handlePreview}
-              className={`px-6 py-2 rounded-md font-medium ${
-                outlines.length === 0
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-gray-500 text-white hover:bg-gray-600'
-              }`}
+              className="px-6 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 font-medium"
               disabled={loadingOutlines}
             >
               {loadingOutlines ? 'Generating Outlines...' : 'Preview Outlines'}
@@ -148,15 +142,12 @@ export default function Home() {
                 className="px-6 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 font-medium"
                 disabled={loadingArticles}
               >
-                {loadingArticles
-                  ? `Generating Articles ${progress}%`
-                  : 'Generate Articles'}
+                {loadingArticles ? `Generating Articles ${progress}%` : 'Generate Articles'}
               </button>
             )}
           </div>
         </div>
 
-        {/* Progress Bar */}
         {loadingArticles && outlines.length > 0 && (
           <div className="mb-10">
             <p className="text-gray-600 mb-2">Progress: {progress}%</p>
@@ -169,7 +160,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Article Cards */}
         {articles.length > 0 && (
           <div className="space-y-6">
             {articles.map((a, idx) => (
