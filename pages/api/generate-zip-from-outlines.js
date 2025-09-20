@@ -51,7 +51,7 @@ MASTER INSTRUCTION: ${instruction}`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  const { outlines = [] } = req.body || {};
+  const { outlines = [], modifier = "" } = req.body || {};
   if (!Array.isArray(outlines) || outlines.length === 0) {
     return res.status(400).json({ error: "No outlines provided." });
   }
@@ -68,8 +68,9 @@ export default async function handler(req, res) {
 
   try {
     for (const art of outlines) {
-      const content = await expandOutline(art.title, art.outline, "Master instruction context");
-      const pdfBuf = await pdfBufferFrom(art.title, content);
+      const fullTitle = modifier + art.title;
+      const content = await expandOutline(fullTitle, art.outline, "Master instruction context");
+      const pdfBuf = await pdfBufferFrom(fullTitle, content);
       archive.append(pdfBuf, { name: art.filename });
     }
     await archive.finalize();

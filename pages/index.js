@@ -10,6 +10,7 @@ export default function Home() {
   }, [router]);
 
   const [instruction, setInstruction] = useState("");
+  const [modifier, setModifier] = useState("");
   const [count, setCount] = useState(5);
   const [outlineList, setOutlineList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ export default function Home() {
       const res = await fetch("/api/generate-zip-from-outlines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ outlines: outlineList }),
+        body: JSON.stringify({ outlines: outlineList, modifier }),
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -60,13 +61,20 @@ export default function Home() {
 
   return (
     <div style={{ padding: "2rem", maxWidth: 800, margin: "auto" }}>
-      <h1>Hybrid Article Generator → PDFs</h1>
+      <h1>Hybrid Article Generator → PDFs (with Modifier)</h1>
 
       <textarea
         style={{ width: "100%", height: 160, margin: "8px 0", padding: "8px" }}
-        placeholder="Enter a single master instruction (e.g. 'Write SEO-friendly articles about Coinbase support with headings and FAQs.')"
+        placeholder="Enter a single master instruction"
         value={instruction}
         onChange={(e) => setInstruction(e.target.value)}
+      />
+
+      <input
+        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
+        placeholder="Optional Modifier (e.g., '2025 Update - ')"
+        value={modifier}
+        onChange={(e) => setModifier(e.target.value)}
       />
 
       <label style={{ display: "block", marginTop: 8 }}>
@@ -96,7 +104,11 @@ export default function Home() {
           <h3>Planned Articles:</h3>
           <ul>
             {outlineList.map((a, i) => (
-              <li key={i}><b>{a.title}</b><br/><i>{a.outline}</i><br/>Filename: {a.filename}</li>
+              <li key={i}>
+                <b>{modifier}{a.title}</b><br/>
+                <i>{a.outline}</i><br/>
+                Filename: {a.filename}
+              </li>
             ))}
           </ul>
           <button
