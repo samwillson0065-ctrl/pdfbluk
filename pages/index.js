@@ -96,23 +96,23 @@ export default function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto py-10 px-6">
-        <div className="bg-white rounded-md shadow-lg p-8 mb-10">
+        <div className="bg-white rounded-md shadow-lg p-8 mb-10 border-2 border-gray-300">
           <h2 className="text-xl font-semibold mb-6 text-gray-800">Generate Articles to PDF</h2>
           <div className="space-y-4">
             <textarea
-              className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full border-2 border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Master Instruction (required)"
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
             />
             <textarea
-              className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full border-2 border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Article titles (required, one per line)"
               value={titlesInput}
               onChange={(e) => setTitlesInput(e.target.value)}
             />
             <input
-              className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full border-2 border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Optional Modifier (e.g., '2025 Update - ')"
               value={modifier}
               onChange={(e) => setModifier(e.target.value)}
@@ -120,7 +120,7 @@ export default function Home() {
             <div className="w-full md:w-1/3">
               <input
                 type="number"
-                className="w-full border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
+                className="w-full border-2 border-gray-300 rounded-md p-4 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
                 placeholder="Word length (e.g., 800)"
                 value={wordLength}
                 onChange={(e) => setWordLength(e.target.value)}
@@ -149,11 +149,11 @@ export default function Home() {
 
         {/* Outlines Preview Section */}
         {outlines.length > 0 && (
-          <div className="bg-white rounded-md shadow p-6 mb-10">
+          <div className="bg-white rounded-md shadow p-6 mb-10 border-2 border-gray-300">
             <h3 className="text-lg font-semibold mb-4">Preview Outlines ({outlines.length})</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
               {outlines.map((o, idx) => (
-                <div key={idx} className="border rounded-lg p-4">
+                <div key={idx} className="border-2 border-gray-300 rounded-lg p-4">
                   <div className="font-semibold text-gray-800 mb-1">{o.title}</div>
                   <div className="text-xs text-gray-500 mb-2">Filename: {o.filename}</div>
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{o.outline || "—"}</p>
@@ -178,28 +178,32 @@ export default function Home() {
         {articles.length > 0 && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold">Generated Articles</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-8">
               {articles.map((a, idx) => (
-                <div key={idx} className="bg-white rounded-md shadow p-6">
+                <div key={idx} className="bg-white rounded-md shadow p-6 border-2 border-gray-300 w-full">
                   <div className="mb-4">
                     <input
-                      className="w-full text-2xl font-semibold border-b border-gray-300 p-2 focus:outline-none"
+                      className="w-full text-2xl font-semibold border-b-2 border-gray-400 p-2 mb-2"
                       value={a.title}
                       onChange={(e) => updateArticle(idx, "title", e.target.value)}
                     />
                     <input
-                      className="w-full text-sm text-gray-500 border-b border-gray-300 p-2 focus:outline-none mt-1"
+                      className="w-full text-sm text-gray-500 border-b border-gray-300 p-2 mb-4"
                       value={a.filename}
                       onChange={(e) => updateArticle(idx, "filename", e.target.value)}
                     />
                   </div>
+
+                  {/* Editable Text */}
                   <textarea
-                    className="w-full border rounded-md p-4 text-gray-700 h-64 focus:ring focus:ring-indigo-200 focus:border-indigo-500"
+                    className="w-full border-2 border-gray-300 rounded-md p-4 h-64 text-gray-700 mb-4"
                     value={a.content}
                     onChange={(e) => updateArticle(idx, "content", e.target.value)}
                   />
-                  <div className="flex justify-end mt-4 text-xs text-gray-500">
-                    {a.content.split(" ").length} words
+
+                  {/* Formatted Preview */}
+                  <div className="prose max-w-none border-2 border-gray-200 rounded-md p-4 bg-gray-50">
+                    <div dangerouslySetInnerHTML={{ __html: a.content.replace(/\n/g, '<br/>') }} />
                   </div>
                 </div>
               ))}

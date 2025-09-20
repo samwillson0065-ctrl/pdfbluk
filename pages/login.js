@@ -20,7 +20,7 @@ export default function Login() {
         <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
         <input
           type="password"
-          className="w-full border rounded-md p-3 mb-4"
+          className="w-full border-2 border-gray-300 rounded-md p-3 mb-4"
           placeholder="Enter password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
