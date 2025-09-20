@@ -13,9 +13,11 @@ export default function Home() {
   const [count, setCount] = useState(20);
   const [fileList, setFileList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState("");
 
   const handlePreview = async () => {
     setLoading(true);
+    setProgress("Generating preview...");
     try {
       const res = await fetch("/api/batch-generate-list", {
         method: "POST",
@@ -25,14 +27,17 @@ export default function Home() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setFileList(data.files || []);
+      setProgress(`Preview ready: ${data.files.length} articles planned.`);
     } catch (err) {
       alert(err.message);
+      setProgress("");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDownload = async () => {
+    setProgress("Generating ZIP...");
     try {
       const res = await fetch("/api/batch-generate-zip", {
         method: "POST",
@@ -46,14 +51,16 @@ export default function Home() {
       a.download = "articles_bundle.zip";
       a.click();
       URL.revokeObjectURL(url);
+      setProgress("ZIP ready and downloaded.");
     } catch (err) {
       alert(err.message);
+      setProgress("");
     }
   };
 
   return (
     <div style={{ padding: "2rem", maxWidth: 800, margin: "auto" }}>
-      <h1>Batch Article → PDFs</h1>
+      <h1>Batch Article → PDFs (Efficient)</h1>
 
       <textarea
         style={{ width: "100%", height: 160, margin: "8px 0", padding: "8px" }}
@@ -79,15 +86,17 @@ export default function Home() {
         disabled={loading}
         style={{ padding: "10px 18px", marginTop: 16 }}
       >
-        {loading ? "Generating Preview..." : "Preview File List"}
+        {loading ? "Generating..." : "Preview File List"}
       </button>
+
+      {progress && <p style={{ marginTop: 10 }}>{progress}</p>}
 
       {fileList.length > 0 && (
         <div style={{ marginTop: 20 }}>
-          <h3>Files to be generated:</h3>
+          <h3>Planned Articles:</h3>
           <ul>
             {fileList.map((f, i) => (
-              <li key={i}>{f}</li>
+              <li key={i}><b>{f.title}</b> → {f.filename}</li>
             ))}
           </ul>
           <button

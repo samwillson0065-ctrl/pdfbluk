@@ -1,4 +1,4 @@
-import { generateArticle } from "./utils";
+import { generateArticles } from "./utils";
 import PDFDocument from "pdfkit";
 import archiver from "archiver";
 
@@ -26,7 +26,6 @@ function pdfBufferFrom(title, content) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
   const { instruction, count = 20 } = req.body || {};
   const n = Math.min(Math.max(parseInt(count || 20, 10), 1), 20);
   if (!instruction || typeof instruction !== "string" || instruction.trim().length < 5) {
@@ -44,18 +43,10 @@ export default async function handler(req, res) {
   archive.pipe(res);
 
   try {
-    const usedNames = new Set();
-    for (let i = 1; i <= n; i++) {
-      const { title, fileBase, content } = await generateArticle(instruction, i);
-      let name = fileBase;
-      let suffix = 1;
-      while (usedNames.has(name)) {
-        name = fileBase + "_" + (++suffix);
-      }
-      usedNames.add(name);
-
-      const pdfBuf = await pdfBufferFrom(title, content);
-      archive.append(pdfBuf, { name: `${name}.pdf` });
+    const articles = await generateArticles(instruction, n);
+    for (const art of articles) {
+      const pdfBuf = await pdfBufferFrom(art.title, art.content);
+      archive.append(pdfBuf, { name: art.filename });
     }
     await archive.finalize();
   } catch (err) {
