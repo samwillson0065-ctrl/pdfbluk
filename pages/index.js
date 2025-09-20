@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { Disclosure } from "@headlessui/react";
+import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 export default function Home() {
   const router = useRouter();
@@ -68,11 +70,22 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-600">AI Article Generator</h1>
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-lg p-6 hidden md:block">
+        <h1 className="text-2xl font-bold text-blue-600 mb-8">AI Writer</h1>
+        <nav className="space-y-4">
+          <a className="block text-gray-700 hover:text-blue-600" href="#">Home</a>
+          <a className="block text-gray-700 hover:text-blue-600" href="#">Generated Files</a>
+          <a className="block text-gray-700 hover:text-blue-600" href="#">Settings</a>
+        </nav>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 p-8">
+        {/* Top Navbar */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Article Generator</h2>
           <button
             className="text-sm text-gray-500 hover:text-red-500"
             onClick={() => {
@@ -83,34 +96,31 @@ export default function Home() {
             Logout
           </button>
         </div>
-      </header>
 
-      {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-10">
         {/* Input Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Configuration</h2>
+        <div className="bg-white shadow-lg rounded-xl p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Configuration</h3>
           <textarea
-            className="w-full border rounded-lg p-3 mb-3"
+            className="w-full border rounded-lg p-3 mb-3 focus:ring-2 focus:ring-blue-500"
             placeholder="Master Instruction (ignored if custom titles are given)"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
           />
           <textarea
-            className="w-full border rounded-lg p-3 mb-3"
+            className="w-full border rounded-lg p-3 mb-3 focus:ring-2 focus:ring-blue-500"
             placeholder="Optional: Custom article titles, one per line"
             value={titlesInput}
             onChange={(e) => setTitlesInput(e.target.value)}
           />
           <input
-            className="w-full border rounded-lg p-3 mb-3"
+            className="w-full border rounded-lg p-3 mb-3 focus:ring-2 focus:ring-blue-500"
             placeholder="Optional Modifier (e.g., '2025 Update - ')"
             value={modifier}
             onChange={(e) => setModifier(e.target.value)}
           />
           <input
             type="number"
-            className="w-full border rounded-lg p-3 mb-3"
+            className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500"
             placeholder="Word length (e.g., 800)"
             value={wordLength}
             onChange={(e) => setWordLength(e.target.value)}
@@ -119,14 +129,14 @@ export default function Home() {
           <div className="flex gap-3">
             <button
               onClick={handlePreview}
-              className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+              className="bg-gray-700 text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition"
             >
               Preview Outlines
             </button>
             {outlines.length > 0 && (
               <button
                 onClick={handleGenerateArticles}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
               >
                 Generate Articles
               </button>
@@ -134,10 +144,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Tracker */}
         {progress > 0 && (
-          <div className="mb-6">
-            <p className="text-sm text-gray-500 mb-2">Generating {progress}% complete</p>
+          <div className="mb-8">
+            <p className="text-sm text-gray-500 mb-2">
+              Generating... {progress}% complete
+            </p>
             <div className="w-full bg-gray-200 rounded-full h-4">
               <div
                 className="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full transition-all duration-500"
@@ -150,32 +162,45 @@ export default function Home() {
         {/* Article Cards */}
         {articles.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold mb-4">Generated Articles</h2>
+            <h3 className="text-lg font-semibold mb-4">Generated Articles</h3>
             {articles.map((a, i) => (
-              <div
-                key={i}
-                className="bg-white shadow-md rounded-lg p-6 mb-6 border hover:border-blue-400 transition"
-              >
-                <input
-                  className="w-full font-bold text-lg mb-2 border-b p-2"
-                  value={a.title}
-                  onChange={(e) => updateArticle(i, "title", e.target.value)}
-                />
-                <input
-                  className="w-full text-sm mb-2 border-b p-2 text-gray-600"
-                  value={a.filename}
-                  onChange={(e) => updateArticle(i, "filename", e.target.value)}
-                />
-                <textarea
-                  className="w-full h-48 border rounded-lg p-3 text-gray-700"
-                  value={a.content}
-                  onChange={(e) => updateArticle(i, "content", e.target.value)}
-                />
-              </div>
+              <Disclosure key={i} defaultOpen>
+                {({ open }) => (
+                  <div className="bg-white shadow-md rounded-lg mb-4">
+                    <Disclosure.Button className="flex justify-between items-center w-full px-4 py-3 text-left text-gray-800 font-medium focus:outline-none">
+                      <span>{a.title}</span>
+                      <ChevronUpIcon
+                        className={`${open ? "transform rotate-180" : ""} w-5 h-5 text-gray-500`}
+                      />
+                    </Disclosure.Button>
+                    <Disclosure.Panel className="px-4 pb-4 text-gray-700">
+                      <input
+                        className="w-full border-b p-2 mb-2 font-semibold"
+                        value={a.title}
+                        onChange={(e) => updateArticle(i, "title", e.target.value)}
+                      />
+                      <input
+                        className="w-full border-b p-2 mb-2 text-sm text-gray-600"
+                        value={a.filename}
+                        onChange={(e) => updateArticle(i, "filename", e.target.value)}
+                      />
+                      <textarea
+                        className="w-full border rounded-lg p-3 h-48 mb-2 focus:ring-2 focus:ring-blue-500"
+                        value={a.content}
+                        onChange={(e) => updateArticle(i, "content", e.target.value)}
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>{a.content.split(" ").length} words</span>
+                        <span className="italic">Editable</span>
+                      </div>
+                    </Disclosure.Panel>
+                  </div>
+                )}
+              </Disclosure>
             ))}
             <button
               onClick={handleDownload}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
+              className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition"
             >
               Download ZIP of PDFs
             </button>
